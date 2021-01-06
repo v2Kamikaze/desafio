@@ -1,6 +1,6 @@
 motoboys = {
     1: {
-        "taxa": 2,
+        "taxa": 2.0,
         "exclusividade": None,
         "pedidos_entregues": {
             "lojas": [],
@@ -9,7 +9,7 @@ motoboys = {
         },
     },
     2: {
-        "taxa": 2,
+        "taxa": 2.0,
         "exclusividade": None,
         "pedidos_entregues": {
             "lojas": [],
@@ -18,7 +18,7 @@ motoboys = {
         },
     },
     3: {
-        "taxa": 2,
+        "taxa": 2.0,
         "exclusividade": None,
         "pedidos_entregues": {
             "lojas": [],
@@ -27,7 +27,7 @@ motoboys = {
         },
     },
     4: {
-        "taxa": 2,
+        "taxa": 2.0,
         "exclusividade": 1,
         "pedidos_entregues": {
             "lojas": [],
@@ -36,7 +36,7 @@ motoboys = {
         },
     },
     5: {
-        "taxa": 3,
+        "taxa": 3.0,
         "exclusividade": None,
         "pedidos_entregues": {
             "lojas": [],
@@ -57,27 +57,48 @@ def pagamento_por_pedido(motoboy, val_pedido, porc):
         A função retorna o valor que o motoboy irá receber pelo pedido,
         baseado na taxa fixa cobrada pelo motoboy, o valor do pedido e a porcentagem
         paga pelo restaurante por cada pedido.
+
+        :param motoboy: int
+        :param val_pedido: float
+        :param porc: float
+
+        :retorna float 
+
     """  
     return motoboys[motoboy]["taxa"] + val_pedido * porc
 
 
-def retirar_pedido(pedidos, motoboy_atual, loja_atual):
+def retirar_pedido(pedidos):
     """
-        A função irá retirar o último pedido inserido no dicionário de pedidos e irá
-        inserir esse pedido nos pedidos entregues do motoboy que o retirou.
+        A função irá retirar o último pedido inserido no dicionário de pedidos e retornar o valor desse pedido.
+
+        :param pedidos: dict
+        :retorna float
+
+    """
+    return pedidos.popitem()[1]
+    
+
+def contabilizar_entrega(pedido_retirado, motoboy_atual, loja_atual):
+    """
+        A função irá inserir as informações da última entrega do motoboy no dicionário de pedidos entregues.
+
+        :param pedido_retirado: float
+        :param motoboy_atual: int
+        :param loja_atual: int
+
     """
     motoboy = motoboys[motoboy_atual]
-    pedido_retirado = pedidos.popitem() # removendo o pedido retirado da loja 
-    valor_do_pedido = pedido_retirado[1]
     porcentagem = lojas[loja_atual]["porcentagem"]
-    pagamento = pagamento_por_pedido(motoboy_atual, valor_do_pedido, porcentagem)
+    pagamento = pagamento_por_pedido(motoboy_atual, pedido_retirado, porcentagem)
     # Adicionando as informações do pedido nos pedidos entregues do motoboy.
     if loja_atual not in motoboy["pedidos_entregues"]["lojas"]:
         motoboy["pedidos_entregues"]["lojas"].append(loja_atual)
     motoboy["pedidos_entregues"]["numero_de_pedidos"] += 1
     motoboy["pedidos_entregues"]["valor_recebido"] += pagamento
 
-def rodizio_de_pedidos(moto = None):
+
+def rodizio_de_pedidos():
     """
         A função rodizio_de_pedidos irá criar uma fila com os motoboys, como a fila de um caixa,
         inicialmente cada motoboy irá para uma loja das 3 e pegará um produto, excluindo o motoboy que tiver exclusividade
@@ -92,7 +113,8 @@ def rodizio_de_pedidos(moto = None):
         pedidos = lojas[loja_atual]["pedidos"]
         if len(pedidos) > 0: 
             if motoboys[motoboy_atual]["exclusividade"] == None:
-                retirar_pedido(pedidos, motoboy_atual, loja_atual)
+                pedido_retirado = retirar_pedido(pedidos)
+                contabilizar_entrega(pedido_retirado, motoboy_atual, loja_atual)
                 num_pedidos -= 1
                 motoboy_atual += 1
                 loja_atual += 1
@@ -104,7 +126,8 @@ def rodizio_de_pedidos(moto = None):
                 loja_exclusiva = motoboys[motoboy_atual]["exclusividade"]
                 pedidos_exclusivos = lojas[loja_exclusiva]["pedidos"]
                 if len(pedidos_exclusivos) > 0:
-                    retirar_pedido(pedidos_exclusivos, motoboy_atual, loja_exclusiva)
+                    pedido_retirado = retirar_pedido(pedidos_exclusivos)
+                    contabilizar_entrega(pedido_retirado, motoboy_atual, loja_exclusiva)
                     num_pedidos -= 1
                     motoboy_atual += 1
                     loja_atual += 1
@@ -124,25 +147,35 @@ def rodizio_de_pedidos(moto = None):
             if loja_atual > 3:
                 loja_atual = 1 
     
+def info_motoboy(moto):
+    """
+        Rececebe o número de um motoboy e imprime no console as informações de um motoboy específico.
 
-def mostrar_entregas(num_moto = None):
-    if num_moto != None:
-        motoboy = motoboys[num_moto]
-        lojas = ','.join([str(m) for m in motoboy["pedidos_entregues"]["lojas"]])
-        num_pedidos =  motoboy["pedidos_entregues"]["numero_de_pedidos"]
-        valor_recebido =  motoboy["pedidos_entregues"]["valor_recebido"]
-        print(f"O motoboy {num_moto} recebeu os pedidos das lojas {lojas} em um total de {num_pedidos} pedidos e recebeu um valor total de {valor_recebido:.2f} R$.")
+        :param moto: int
+    """
+    motoboy = motoboys[moto]
+    lojas = ','.join([str(m) for m in motoboy["pedidos_entregues"]["lojas"]])
+    num_pedidos =  motoboy["pedidos_entregues"]["numero_de_pedidos"]
+    valor_recebido =  motoboy["pedidos_entregues"]["valor_recebido"]
+    print(f"O motoboy {moto} recebeu os pedidos das lojas {lojas} em um total de {num_pedidos} pedidos e recebeu um valor total de {valor_recebido:.2f} R$.")
+
+def mostrar_entregas(num_motoboy = None):
+    """
+        Imprime no console as informações de todos os motoboys ou de um específico
+        caso o parâmetro num_motoboy seja passado.
+
+        :param num_motoboy: int
+    """
+    if num_motoboy != None:
+        info_motoboy(num_motoboy)
     else:
         for moto in motoboys:
-            motoboy = motoboys[moto]
-            lojas = ','.join([str(m) for m in motoboy["pedidos_entregues"]["lojas"]])
-            num_pedidos =  motoboy["pedidos_entregues"]["numero_de_pedidos"]
-            valor_recebido =  motoboy["pedidos_entregues"]["valor_recebido"]
-            print(f"O motoboy {moto} recebeu os pedidos das lojas {lojas} em um total de {num_pedidos} pedidos e recebeu um valor total de {valor_recebido:.2f} R$.")
+            info_motoboy(moto)
+        
 
 
 
-motoboy_escolhido = input("Motoboy a ser escolhido [1,2,3,4] ou só Enter para passar.\n")
+motoboy_escolhido = input("Motoboy a ser escolhido [1,2,3,4,5] ou só Enter para passar.\n")
 
 rodizio_de_pedidos()
 if motoboy_escolhido == '':
