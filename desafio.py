@@ -151,7 +151,7 @@ def atualizar_num_loja():
         loja_atual = 1
 
 
-def exclusivo():
+def nao_exclusivo():
     """
         Veririfica se o motoboy tem exclusividade com alguma loja.
 
@@ -192,12 +192,14 @@ def rodizio_de_pedidos():
         simulando que ele foi fazer a entrega.
         O rodízio será feito de modo que cada motoboy irá pegar apenas
         um pedido por vez enquanto houverem pedidos.
+
+        :retorna bool
     """
     global num_pedidos, loja_atual, moto_atual
     while num_pedidos > 0:
         pedidos = lojas[loja_atual]["pedidos"]
         if len(pedidos) > 0:
-            if exclusivo():
+            if nao_exclusivo():
                 pedido_ret = retirar_pedido(pedidos)
                 contabilizar_entrega(pedido_ret, moto_atual, loja_atual)
                 atualizar_num_pedidos()
